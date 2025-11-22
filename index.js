@@ -1,8 +1,8 @@
-// server.js
+
 import dotenv from "dotenv";
-dotenv.config(); 
+dotenv.config();
+
 import express from "express";
-import path from "path";
 import cors from "cors";
 import mongoose from "mongoose";
 import { PrismaClient } from "@prisma/client";
@@ -23,7 +23,7 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Log each request for debugging
+// Log requests for debugging
 app.use((req, res, next) => {
   console.log(`${req.method} ${req.url}`);
   next();
@@ -36,9 +36,10 @@ app.use("/api/auth", authRoutes);
 app.use("/api/tasks", taskRoutes);
 
 // Test route
-app.get("/api/test", (req, res) => {
-  res.send("✅ Backend route works!");
-});
+app.get("/api/test", (req, res) => res.send("✅ Backend route works!"));
+
+// Root route for backend health check
+app.get("/", (req, res) => res.send("TaskFlow Backend is running!"));
 
 // ---------------------------
 // SWAGGER SETUP
@@ -53,11 +54,11 @@ const swaggerOptions = {
     },
     servers: [
       {
-        url: `http://localhost:${PORT}`,
+        url: "https://taskflow-backend-qpr4.onrender.com", // Update to your Render backend URL
       },
     ],
   },
-  apis: ["./routes/*.js"], // your route files with swagger comments
+  apis: ["./routes/*.js"], // Path to your route files with Swagger comments
 };
 
 const swaggerSpec = swaggerJsdoc(swaggerOptions);
@@ -73,7 +74,7 @@ mongoose
   .then(() => console.log("✅ Connected to MongoDB"))
   .catch((err) => console.error("❌ MongoDB connection failed:", err));
 
-// PostgreSQL / Prisma
+// PostgreSQL via Prisma
 (async () => {
   try {
     await prisma.$connect();
@@ -84,24 +85,9 @@ mongoose
 })();
 
 // ---------------------------
-// FRONTEND SPA SERVE (optional)
-// ---------------------------
-const frontendBuildPath = path.join(process.cwd(), "..", "frontend", "build");
-try {
-  app.use(express.static(frontendBuildPath));
-  app.get("*", (req, res) => {
-    if (req.path.startsWith("/api/")) return res.status(404).send({ error: "API route not found" });
-    res.sendFile(path.join(frontendBuildPath, "index.html"));
-  });
-  console.log("✅ Serving frontend SPA from:", frontendBuildPath);
-} catch (err) {
-  console.warn("ℹ️ Frontend build not found, skipping SPA serve");
-}
-
-// ---------------------------
 // START SERVER
 // ---------------------------
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
-  console.log(`🔗 Swagger docs available at http://localhost:${PORT}/api-docs`);
+  console.log(`🔗 Swagger docs: https://taskflow-backend-qpr4.onrender.com/api-docs`);
 });
